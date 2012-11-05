@@ -21,8 +21,8 @@ generateFromOnePolyonimo(Polyomino) ->
 
 generateInternal(0, GeneratedSoFar) -> GeneratedSoFar;
 generateInternal(N, GeneratedSoFar) -> 
-   generateInternal(N-1, lists:flatmap(fun (X) -> generateFromOnePolyonimo(X) end, GeneratedSoFar)). 
+   generateInternal(N-1, lists:usort(lists:flatmap(fun (X) -> generateFromOnePolyonimo(X) end, GeneratedSoFar))). 
 
 generate(1) -> [[{0,0}]];
-generate(N) when N>0 -> lists:usort(generateInternal(N-1, generate(1))).
+generate(N) when N>0 -> generateInternal(N-1, generate(1)).
 
