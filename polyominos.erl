@@ -1,6 +1,10 @@
 -module(polyominos).
 -export([adjacents/1, translate/1, generate/1, retrieveCanonicalForm/1]).
 
+translate(Polyomino) -> 
+   {MinX, MinY} = {lists:min([X || {X,_} <- Polyomino]), lists:min([Y || {_,Y} <- Polyomino])},
+   [{X-MinX, Y-MinY} || {X, Y} <- Polyomino].
+
 rotate({X,Y}, Theta) -> 
    {round(X*math:cos(Theta) - Y*math:sin(Theta)), round(X*math:sin(Theta) + Y*math:cos(Theta))}.
 
@@ -29,16 +33,11 @@ adjacentsInternal([Current|Remainings], Polyomino, AdjacentsSoFar) ->
 
 adjacents(Polyomino) -> adjacentsInternal(Polyomino, Polyomino, []).
 
-translate([Head|Tail]) -> 
-   {MinX, MinY} = lists:foldl(fun ({X, Y}, {AccX, AccY}) -> {min(X, AccX), min(Y, AccY)} end, Head, Tail),
-   [{X-MinX, Y-MinY} || {X, Y} <- [Head|Tail]].
-
 generateFromOnePolyonimo(Polyomino) -> 
-   PotentialPolyominos = lists:map(fun (X) -> lists:sort(translate(X)) end, [[Adjacent]++Polyomino || Adjacent <- adjacents(Polyomino)]),
-   lists:usort([retrieveCanonicalForm(PotentialPolyomino) || PotentialPolyomino <- PotentialPolyominos]).
+   lists:usort(lists:map(fun (X) -> retrieveCanonicalForm(translate(X)) end, [[Adjacent]++Polyomino || Adjacent <- adjacents(Polyomino)])).
 
 generateInternal(0, GeneratedSoFar) -> GeneratedSoFar;
-generateInternal(N, GeneratedSoFar) -> 
+generateInternal(N, GeneratedSoFar) when N>0 -> 
    generateInternal(N-1, lists:usort(lists:flatmap(fun (X) -> generateFromOnePolyonimo(X) end, GeneratedSoFar))). 
 
 generate(1) -> [[{0,0}]];
