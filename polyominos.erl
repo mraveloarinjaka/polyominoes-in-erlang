@@ -1,6 +1,10 @@
 -module(polyominos).
 -export([generate/1]).
 
+-import(plists).
+
+-define(PCONTEXT, {processes, 16}).
+
 translate(Polyomino) -> 
    {MinX, MinY} = {lists:min([X || {X,_} <- Polyomino]), lists:min([Y || {_,Y} <- Polyomino])},
    [{X-MinX, Y-MinY} || {X, Y} <- Polyomino].
@@ -35,7 +39,8 @@ generateFromOnePolyonimo(Polyomino) ->
 
 generateInternal(0, GeneratedSoFar) -> GeneratedSoFar;
 generateInternal(N, GeneratedSoFar) when N>0 -> 
-   generateInternal(N-1, lists:usort(lists:append([generateFromOnePolyonimo(X) || X <- GeneratedSoFar]))). 
+   GrownPolyominos = plists:map(fun (X) -> generateFromOnePolyonimo(X) end, GeneratedSoFar, ?PCONTEXT),
+   generateInternal(N-1, lists:usort(lists:append(GrownPolyominos))). 
 
 generate(1) -> [[{0,0}]];
 generate(N) when N>1 -> generateInternal(N-1, generate(1)).
