@@ -3,8 +3,8 @@
 
 -import(plists).
 
+-define(CHUNK, 1000).
 -define(PCONTEXT, {processes, 4}).
--define(CHUNK, 100).
 
 translate(Polyomino) -> 
    {MinX, MinY} = {lists:min([X || {X,_} <- Polyomino]), lists:min([Y || {_,Y} <- Polyomino])},
@@ -38,19 +38,21 @@ generateFromOnePolyonimo(Polyomino) ->
    GrownPolyominos = [[Adjacent]++Polyomino || Adjacent <- adjacents(Polyomino)],
    lists:usort(lists:map(fun (X) -> retrieveCanonicalForm(translate(lists:sort(X))) end, GrownPolyominos)).
 
-processByChunk([], Result) -> Result;
-processByChunk(ChunkToProcess, Result) ->
-      Chunk = lists:sublist(ChunkToProcess, ?CHUNK),
-      Remaining = if ?CHUNK < length(ChunkToProcess) -> lists:nthtail(?CHUNK+1, ChunkToProcess);
-                     true -> []
-                  end,
-      GrownPolyominos = plists:map(fun (X) -> generateFromOnePolyonimo(X) end, Chunk, ?PCONTEXT),
-      processByChunk(Remaining, plists:usort(GrownPolyominos++Result)).
+%processByChunk([], Result) -> Result;
+%processByChunk(ChunkToProcess, Result) ->
+%   Chunk = lists:sublist(ChunkToProcess, ?CHUNK),
+%   Remaining = if ?CHUNK < length(ChunkToProcess) -> lists:nthtail(?CHUNK+1, ChunkToProcess);
+%      true -> []
+%   end,
+%   GrownPolyominos = plists:map(fun (X) -> generateFromOnePolyonimo(X) end, Chunk, ?PCONTEXT),
+%   processByChunk(Remaining, plists:usort(GrownPolyominos++Result)).
 
-generateInternal(0, GeneratedSoFar) -> GeneratedSoFar;
-generateInternal(N, GeneratedSoFar) when N>0 -> 
-   generateInternal(N-1, lists:usort(lists:append(processByChunk(GeneratedSoFar, [])))). 
+generate(0, GeneratedSoFar) -> GeneratedSoFar;
+generate(N, GeneratedSoFar) when N>0 -> 
+   GrownPolyominos = lists:append(plists:map(fun (X) -> generateFromOnePolyonimo(X) end, GeneratedSoFar, [?CHUNK, ?PCONTEXT])),
+   Result = plists:usort(fun (A, B) -> A =< B end, GrownPolyominos, [?CHUNK, ?PCONTEXT]),
+   generate(N-1, Result). 
 
 generate(1) -> [[{0,0}]];
-generate(N) when N>1 -> generateInternal(N-1, generate(1)).
+generate(N) when N>1 -> generate(N-1, generate(1)).
 
